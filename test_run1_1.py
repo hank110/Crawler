@@ -21,7 +21,8 @@ browser.get('http://s.weibo.com/weibo/%25E9%259F%25A9%25E5%259B%25BD&b=1&page=1'
 
 
 try:
-    element = ui.WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.ID, "S_weibo")))
+    element = ui.WebDriverWait(browser, 90).until(EC.presence_of_element_located((By.ID, "S_weibo")))
+
 finally:
     # denoting xpath for necessary componenets for contents of interest
     elements = browser.find_elements_by_xpath(".//p[@class='comment_txt']")
@@ -73,7 +74,9 @@ finally:
             else:
                 print "%d-%d-%d %s" % (current_time.year, month, day, splited[1])
         elif "今天" in time_part:
-            print "%d-%d-%d %s" % (current_time.year, current_time.month, current_time.day, splited[1])
+            position = int(time_part.index('天'))
+            time = time_part[position+1:]    
+            print "%d-%d-%d %s" % (current_time.year, current_time.month, current_time.day, time)
         else:
             print time_part + " " + splited[1]
            
