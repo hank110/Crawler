@@ -31,6 +31,12 @@ finally:
     test = browser.find_elements_by_xpath(".//div[@class='feed_from W_textb']")
     cellphone = browser.find_elements_by_xpath(".//a[@rel='nofollow']")
     
+    elements_container = []
+    name_container = []
+    num_likes_container = []
+    time_container = []
+    cellphone_container = []
+    
     current_time = datetime.datetime.now()
     
     # url of each user acquired
@@ -72,7 +78,7 @@ finally:
     for i in range(0, len(cellphone)):
         cell = cellphone[i].text
         print cell    
-    
+        
     # to get numbers of retweet, comment, likes, respectively
     # refering tweet = yes, related article = no
     num_elements =[]
@@ -85,8 +91,9 @@ finally:
             continue
         
     # to find the indices of unnecessary elements(likes & share menues and the number of likes for "related articles)
-    indices = [i for i, x in enumerate(num_elements) if x == '\xe5\x88\x86\xe4\xba\xab']
-    del num_elements[indices[0]:indices[-1]+2]
+    indices = [i for i, s in enumerate(num_elements) if '分享' in s]
+    starting_position = indices[0]
+    del num_elements[starting_position:starting_position+6]
      
     final_num_elements =[]
     for i in range(0, len(num_elements)):
