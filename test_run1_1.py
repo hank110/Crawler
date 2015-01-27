@@ -67,13 +67,17 @@ finally:
             position2 = int(time_part.index('日'))
             month = int(time_part[0:position1])
             day = int(time_part[position1+3:position2])
-            print "%d-%d-%d %s" % (current_time.year, month, day, splited[1])
+            if (splited[1] == "来自"):
+                time = time_part[position2+1:]
+                print "%d-%d-%d %s" % (current_time.year, month, day, time)
+            else:
+                print "%d-%d-%d %s" % (current_time.year, month, day, splited[1])
         elif "今天" in time_part:
             print "%d-%d-%d %s" % (current_time.year, current_time.month, current_time.day, splited[1])
         else:
             print time_part + " " + splited[1]
-            
-          
+           
+    
     # refering tweet = yes, related article = no
     for i in range(0, len(cellphone)):
         cell = cellphone[i].text
@@ -119,3 +123,4 @@ finally:
     for i in range(0,len(elements)):
         text_elements = elements[i].text
         print text_elements
+    
