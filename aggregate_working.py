@@ -13,6 +13,8 @@ from datetime import timedelta
 import sys
 import codecs
 
+import time
+
 def text_crawler(telements):
     text_holder = []
     for i in range(0,len(telements)):
@@ -125,29 +127,35 @@ def main():
     #for i in range(1, 3):
     browser = webdriver.Chrome()
     browser.get('http://s.weibo.com/wb/%25E9%259F%25A9%25E5%259B%25BD&xsort=time&Refer=weibo_wb')
+    for handle in browser.window_handles:
+        print handle
     browser.implicitly_wait(30)
-    '''
+    
     login = browser.find_element_by_xpath('.//a[@node-type="loginBtn"]')
     login.click()
     browser.implicitly_wait(30)
-    username = browser.find_elements_by_xpath(".//input[@class='W_input']")
-    print username
-    # username.send_keys("hank1111@gmail.com")
-  
+    for handle in browser.window_handles:
+        browser.switch_to.window(handle)
+    print handle    
+    username = browser.find_element_by_xpath(".//input[@tabindex='1']")
+    password = browser.find_element_by_xpath(".//input[@tabindex='2']")
+    username.send_keys("ID")
+    password.send_keys("PASS")
+    ok = browser.find_element_by_xpath('.//a[@node-type="submitBtn"]')
+    ok.click()
     
-    '''
-    browser.implicitly_wait(20)
+    time.sleep(20)
     
     elements = browser.find_elements_by_xpath(".//p[@class='comment_txt']")
     name = browser.find_elements_by_xpath(".//a[@class='W_texta W_fb']")
     num_likes = browser.find_elements_by_xpath(".//span[@class='line S_line1']")
-    time = browser.find_elements_by_xpath(".//div[@class='feed_from W_textb']")
+    post_time = browser.find_elements_by_xpath(".//div[@class='feed_from W_textb']")
     cellphone = browser.find_elements_by_xpath(".//a[@rel='nofollow']")
             
     text = text_crawler(elements)
     id_user = id_crawler(name)
     url = url_crawler(name)
-    time = time_crawler(time)
+    post_time = time_crawler(post_time)
     provider = cellphone_crawler(cellphone)
     num_like_preprocessed = num_like_crawler(num_likes)
     num_like_processed = num_like_separator(numeric_transition(num_like_preprocessed))
@@ -155,9 +163,12 @@ def main():
     print len(text)
     print len(id_user)
     print len(url)
-    print len(time)
+    print len(post_time)
     print len(provider)
-            
+    
+    next_button = browser.find_element_by_xpath('.//a[@class="page next S_txt1 S_line1"]')
+    next_button.click()
+    '''        
     for j in range(0, len(text)):
         entry = {}  
         entry['ID'] = id_user[j].encode('utf-8')
@@ -172,6 +183,6 @@ def main():
                     json.dump(entry, outfile)
                 except UnicodeDecodeError:
                     continue
-
+'''
 if __name__ == "__main__":
     main() 
