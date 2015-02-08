@@ -14,6 +14,7 @@ import sys
 import codecs
 
 import time
+from random import randint
 
 def text_crawler(telements):
     text_holder = []
@@ -25,7 +26,8 @@ def text_crawler(telements):
 def id_crawler(name):
     id_holder = []
     for i in range(0,len(name)):
-        if name[i].get_attribute("nick-name") is None:
+        if not name[i].get_attribute("nick-name"):
+            id_holder.append("None")
             continue
         else:
             id_holder.append(name[i].text)
@@ -34,55 +36,57 @@ def id_crawler(name):
 def url_crawler(name):
     url_holder = []
     for i in range(0,len(name)):
-        url = str(name[i].get_attribute("href"))
-        if 'http://weibo.com/p/' in url:
-            continue
-        elif 'http://weibo.com/' not in url:
+        if not name[i].get_attribute("href"):
+            url_holder.append("None")
             continue
         else:
+            url = str(name[i].get_attribute("href"))
             url_holder.append(url)
     return url_holder
 
-def time_crawler(time):
+def time_crawler(post_time):
     current_time = datetime.datetime.now()
     time_holder =[]
-    for i in range(0, len(time)):
-        tt = time[i].text
-        splited = tt.split(" ")
-        time_part = splited[0].encode('utf-8')
-        if "分" in time_part:
-            position = time_part.index('分')
-            minutedelta = int(time_part[0:position])
-            time_of_single_tweet = current_time - datetime.timedelta(minutes = minutedelta)
-            time_holder.append(time_of_single_tweet.strftime("%Y-%m-%d %H:%M:%S"))
-        elif "秒" in time_part:
-            position = time_part.index('秒')
-            seconddelta = int(time_part[0:position])
-            time_of_single_tweet = current_time - datetime.timedelta(seconds = seconddelta)
-            time_holder.append(time_of_single_tweet.strftime("%Y-%m-%d %H:%M:%S"))
-        elif "月" in time_part:
-            position1 = int(time_part.index('月'))
-            position2 = int(time_part.index('日'))
-            month = int(time_part[0:position1])
-            day = int(time_part[position1+3:position2])
-            if (splited[1] == "来自"):
-                hour_min = time_part[position2+1:]
-                time_holder.append("%d-%d-%d %s" % (current_time.year, month, day, hour_min))
+    for i in range(0, len(post_time)):
+        time_retweet = post_time[i].find_element_by_xpath('.//a')
+        actual_cell = time_retweet.get_attribute("title")
+        if not actual_cell:
+            previous_time = time_retweet.text.encode('utf-8')
+            # adjusting yue & ri(format done)
+            if '\xe6\x9c\x88' in previous_time:          
+                previous_time_edited = previous_time.replace("\xe6\x9c\x88", "-")
+                previous_time_edited2 = previous_time_edited.replace("\xe6\x97\xa5", " ")
+                current_year = "%4d-" % (current_time.year)
+                combined_string = current_year + previous_time_edited2
+                time_holder.append(combined_string)
+            # adjusting jin tian (format done)
+            elif '\xe4\xbb\x8a\xe5\xa4\xa9' in previous_time:
+                previous_time_edited = previous_time.replace("\xe4\xbb\x8a\xe5\xa4\xa9", "")
+                current_ymd = "%4d-%d-%d " % (current_time.year, current_time.month, current_time.day)
+                combined_string = current_ymd + previous_time_edited
+                time_holder.append(combined_string)        
+            # adjusting fen
+            elif '\xe5\x88\x86\xe9\x92\x9f\xe5\x89\x8d' in previous_time:
+                previous_time_edited = previous_time.replace("\xe5\x88\x86\xe9\x92\x9f\xe5\x89\x8d", "")
+                # print previous_time_edited
+                time_of_single_tweet = current_time - datetime.timedelta(minutes = int(previous_time_edited))
+                time_holder.append(time_of_single_tweet.strftime("%Y-%m-%d %H:%M:%S"))
             else:
-                time_holder.append("%d-%d-%d %s" % (current_time.year, month, day, splited[1]))
-        elif "今天" in time_part:
-            position = int(time_part.index('天'))
-            hour_min = time_part[position+1:]    
-            time_holder.append("%d-%d-%d %s" % (current_time.year, current_time.month, current_time.day, hour_min))
+                time_holder.append(previous_time)
         else:
-            time_holder.append(time_part + " " + splited[1])
+            time_holder.append(actual_cell)
     return time_holder
-
+    
 def cellphone_crawler(cellphone):
     cell_holder = []
     for i in range(0, len(cellphone)):
-        cell = cellphone[i].text
-        cell_holder.append(cell)
+        try:
+            actual_cell = cellphone[i].find_element_by_xpath('.//a[@rel = "nofollow"]')
+            cell = actual_cell.text
+            cell_holder.append(cell)
+        except NoSuchElementException:
+            cell_holder.append("None")
+            continue
     return cell_holder
 
 def num_like_crawler(num_likes):
@@ -124,65 +128,80 @@ def num_like_separator(num_elements):
         
 def main():
     current_time = datetime.datetime.now()
-    #for i in range(1, 3):
     browser = webdriver.Chrome()
     browser.get('http://s.weibo.com/wb/%25E9%259F%25A9%25E5%259B%25BD&xsort=time&Refer=weibo_wb')
-    for handle in browser.window_handles:
-        print handle
-    browser.implicitly_wait(30)
+    time.sleep(30)
     
     login = browser.find_element_by_xpath('.//a[@node-type="loginBtn"]')
     login.click()
-    browser.implicitly_wait(30)
+    time.sleep(20)
     for handle in browser.window_handles:
         browser.switch_to.window(handle)
-    print handle    
+
     username = browser.find_element_by_xpath(".//input[@tabindex='1']")
     password = browser.find_element_by_xpath(".//input[@tabindex='2']")
     username.send_keys("ID")
-    password.send_keys("PASS")
+    password.send_keys("Password")
     ok = browser.find_element_by_xpath('.//a[@node-type="submitBtn"]')
     ok.click()
     
     time.sleep(20)
     
-    elements = browser.find_elements_by_xpath(".//p[@class='comment_txt']")
-    name = browser.find_elements_by_xpath(".//a[@class='W_texta W_fb']")
-    num_likes = browser.find_elements_by_xpath(".//span[@class='line S_line1']")
-    post_time = browser.find_elements_by_xpath(".//div[@class='feed_from W_textb']")
-    cellphone = browser.find_elements_by_xpath(".//a[@rel='nofollow']")
-            
-    text = text_crawler(elements)
-    id_user = id_crawler(name)
-    url = url_crawler(name)
-    post_time = time_crawler(post_time)
-    provider = cellphone_crawler(cellphone)
-    num_like_preprocessed = num_like_crawler(num_likes)
-    num_like_processed = num_like_separator(numeric_transition(num_like_preprocessed))
-    print len(num_like_processed)
-    print len(text)
-    print len(id_user)
-    print len(url)
-    print len(post_time)
-    print len(provider)
+    # To check if end reached
+    checker = True
     
-    next_button = browser.find_element_by_xpath('.//a[@class="page next S_txt1 S_line1"]')
-    next_button.click()
-    '''        
-    for j in range(0, len(text)):
-        entry = {}  
-        entry['ID'] = id_user[j].encode('utf-8')
-        entry['text'] = text[j].encode('utf-8')
-        entry['url'] = url[j]
-        entry['time'] = time[j]
-        entry['source'] = provider[j].encode('utf-8')
-        entry['number of response'] = num_like_processed[j]
-        print entry
-        with codecs.open('data' + str(current_time.year) + str(current_time.month) + str(current_time.day) + str(current_time.hour) + str(current_time.minute) + "_"+ `j` +'.json', 'w', encoding='utf-8') as outfile:
-                try:
-                    json.dump(entry, outfile)
-                except UnicodeDecodeError:
-                    continue
-'''
+    counter = 0
+    while(checker == True):
+        ran_sec = randint(1, 90)
+        time.sleep(ran_sec)
+        counter += 1
+        
+        elements = browser.find_elements_by_xpath(".//p[@class='comment_txt']")
+        name = browser.find_elements_by_xpath(".//a[@class='W_texta W_fb']")
+        num_likes = browser.find_elements_by_xpath(".//span[@class='line S_line1']")
+        post_time = browser.find_elements_by_xpath(".//div[@class='feed_from W_textb']") 
+        cellphone = browser.find_elements_by_xpath(".//div[@class='feed_from W_textb']")
+                
+        text = text_crawler(elements)
+        id_user = id_crawler(name)
+        url = url_crawler(name)
+        posted_time = time_crawler(post_time)
+        provider = cellphone_crawler(cellphone)
+        num_like_preprocessed = num_like_crawler(num_likes)
+        num_like_processed = num_like_separator(numeric_transition(num_like_preprocessed))
+        print len(num_like_processed)
+        print len(text)
+        print len(id_user)
+        print len(url)
+        print len(posted_time)
+        print len(provider)
+        
+        
+        for j in range(0, len(text)):
+            entry = {}  
+            entry['ID'] = id_user[j].encode('utf-8')
+            entry['Text'] = text[j].encode('utf-8')
+            entry['Url'] = url[j]
+            entry['Time'] = posted_time[j]
+            entry['Number of Response'] = num_like_processed[j]
+            entry['Source'] = provider[j].encode('utf-8')
+            with codecs.open(str(current_time.month) + str(current_time.day) + str(current_time.hour) + str(current_time.minute) + "_" +str(counter) + "_"+ `j` +'.json', 'w', encoding='utf-8') as outfile:
+                    try:
+                        json.dump(entry, outfile)
+                        print "Crawl Complete"
+                    except UnicodeDecodeError:
+                        continue
+        
+        try:
+            next_button = browser.find_element_by_xpath('.//a[@class="page next S_txt1 S_line1"]')
+            next_button.click()
+            print "Next Page"
+            continue
+        except NoSuchElementException:
+            print "No Such Elements"
+            time.sleep(20)
+            continue
+        break
+
 if __name__ == "__main__":
     main() 
