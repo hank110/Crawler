@@ -26,22 +26,39 @@ def text_crawler(telements):
 def id_crawler(name):
     id_holder = []
     for i in range(0,len(name)):
-        if not name[i].get_attribute("nick-name"):
-            id_holder.append("None")
+        original_id_loc = name[i].find_element_by_xpath(".//a[@class='W_texta W_fb']")
+        original_id = original_id_loc.get_attribute("nick-name")
+        id_holder.append(original_id)
+        try:
+            additional_id_loc = name[i].find_element_by_xpath(".//div[@node-type='feed_list_forwardContent']")
+            try:
+                additional_id_loc_specific = additional_id_loc.find_element_by_xpath(".//a[@class='W_texta W_fb']")
+                additional_id = additional_id_loc_specific.text
+                id_holder.append(additional_id)
+            except NoSuchElementException:
+                id_holder.append("Deleted Post")
+                continue
+        except NoSuchElementException:
             continue
-        else:
-            id_holder.append(name[i].text)
     return id_holder
 
 def url_crawler(name):
     url_holder = []
     for i in range(0,len(name)):
-        if not name[i].get_attribute("href"):
-            url_holder.append("None")
+        original_url_loc = name[i].find_element_by_xpath(".//a[@class='W_texta W_fb']")
+        original_url = original_url_loc.get_attribute("href")
+        url_holder.append(original_url)
+        try:
+            additional_url_loc = name[i].find_element_by_xpath(".//div[@node-type='feed_list_forwardContent']")
+            try:
+                additional_url_loc_specific = additional_url_loc.find_element_by_xpath(".//a[@class='W_texta W_fb']")
+                additional_url = additional_url_loc_specific.get_attribute("href")
+                url_holder.append(additional_url)
+            except NoSuchElementException:
+                url_holder.append("Deleted Post")
+                continue
+        except NoSuchElementException:
             continue
-        else:
-            url = str(name[i].get_attribute("href"))
-            url_holder.append(url)
     return url_holder
 
 def time_crawler(post_time):
@@ -140,8 +157,8 @@ def main():
 
     username = browser.find_element_by_xpath(".//input[@tabindex='1']")
     password = browser.find_element_by_xpath(".//input[@tabindex='2']")
-    username.send_keys("ID")
-    password.send_keys("Password")
+    username.send_keys("id")
+    password.send_keys("password")
     ok = browser.find_element_by_xpath('.//a[@node-type="submitBtn"]')
     ok.click()
     
@@ -157,11 +174,10 @@ def main():
         counter += 1
         
         elements = browser.find_elements_by_xpath(".//p[@class='comment_txt']")
-        name = browser.find_elements_by_xpath(".//a[@class='W_texta W_fb']")
+        name = browser.find_elements_by_xpath(".//div[@class='feed_content wbcon']")
         num_likes = browser.find_elements_by_xpath(".//span[@class='line S_line1']")
         post_time = browser.find_elements_by_xpath(".//div[@class='feed_from W_textb']") 
         cellphone = browser.find_elements_by_xpath(".//div[@class='feed_from W_textb']")
-                
         text = text_crawler(elements)
         id_user = id_crawler(name)
         url = url_crawler(name)
@@ -175,8 +191,7 @@ def main():
         print len(url)
         print len(posted_time)
         print len(provider)
-        
-        
+
         for j in range(0, len(text)):
             entry = {}  
             entry['ID'] = id_user[j].encode('utf-8')
@@ -191,17 +206,19 @@ def main():
                         print "Crawl Complete"
                     except UnicodeDecodeError:
                         continue
+        if counter == 50:
+            print "Crawl Complete"
+            break
+        else:
+            try:
+                next_button = browser.find_element_by_xpath('.//a[@class="page next S_txt1 S_line1"]')
+                next_button.click()
+                print "Next Page"
+                time.sleep(20)
+                continue
+            except NoSuchElementException:
+                print "Crawling Finished"
+                break
         
-        try:
-            next_button = browser.find_element_by_xpath('.//a[@class="page next S_txt1 S_line1"]')
-            next_button.click()
-            print "Next Page"
-            continue
-        except NoSuchElementException:
-            print "No Such Elements"
-            time.sleep(20)
-            continue
-        break
-
 if __name__ == "__main__":
     main() 

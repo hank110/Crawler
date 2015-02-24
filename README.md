@@ -22,8 +22,17 @@
 #### 2015-02-08:
 ##### Things to Tweak Around
 - How to stop this crawler? When to stop this crawler?
-- What happens after page 50?
+	- doesn't take long time to compare the latest (one-by-one) prior to making it in json file
+- What happens after page 50? (It repeats)
+	- Repeat of page 1 
+	- Stopped at max 50
 - Duplicate prevention method to prevent the crawler from crawling duplicate posts compared with previous crawling session
-- Exception handling for weird posts without names & urls 
+- Exception handling for weird posts without names & urls (Resolved)
 	- possibly exception handling for index error
-	- Or is there a better way to handle this without loss of posts? 
+	- Or is there a better way to handle this without loss of posts?
+
+#### 2015-02-24:
+- How to stop this crawler? When to stop this crawler? (Resolved)
+	- Stopped when click button doesn't exit
+	- consequently move to different time period
+- perhaps better naming?
